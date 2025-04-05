@@ -7,6 +7,42 @@ from dataclasses import dataclass
 
 import pyxel
 
+SPRITE_WIDTH = 16
+SPRITE_HEIGHT = 16
+
+
+@dataclass
+class Enemy:
+    x: int
+    y: int
+    r: int
+    c: int | None = None
+
+    @staticmethod
+    def random() -> Enemy:
+        return Enemy(
+            random.choice(range(1, 320)),
+            random.choice(range(1, 240)),
+            random.choice(range(5, 16)),
+            random.choice(range(1, 10)),
+        )
+
+    def draw(self) -> None:
+        if self.c is not None:
+            pyxel.blt(
+                self.x - SPRITE_WIDTH // 2,
+                self.y - SPRITE_HEIGHT // 2,
+                0,
+                0,
+                0,
+                20,
+                20,
+                0,
+            )
+
+    def overlaps(self, other: Enemy) -> bool:
+        return math.hypot(other.x - self.x, other.y - self.y) < (self.r + other.r)
+
 
 class Context:
     def __init__(self, state: State) -> None:
@@ -27,14 +63,14 @@ class State(ABC):
 class GameState(State):
     def __init__(self) -> None:
         self._score: int = 10
-        self._cur_enemy: Circle = Circle.random()
+        self._cur_enemy: Enemy = Enemy.random()
 
     def update(self, context: Context) -> None:
         if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
-            cursor = Circle(pyxel.mouse_x, pyxel.mouse_y, 2)
+            cursor = Enemy(pyxel.mouse_x, pyxel.mouse_y, 2)
             if cursor.overlaps(self._cur_enemy):
                 self._score += 10
-                self._cur_enemy = Circle.random()
+                self._cur_enemy = Enemy.random()
             else:
                 self._score -= 15
 
@@ -44,13 +80,8 @@ class GameState(State):
     def draw(self) -> None:
         pyxel.cls(10)
 
-        if self._cur_enemy and self._cur_enemy.c:
-            pyxel.circ(
-                self._cur_enemy.x,
-                self._cur_enemy.y,
-                self._cur_enemy.r,
-                self._cur_enemy.c,
-            )
+        if self._cur_enemy:
+            self._cur_enemy.draw()
         pyxel.circ(pyxel.mouse_x, pyxel.mouse_y, 2, 11)
 
         score_txt = f"SCORE: {self._score:>4}"
@@ -78,30 +109,11 @@ class GameOverState(State):
         )
 
 
-@dataclass
-class Circle:
-    x: int
-    y: int
-    r: int
-    c: int | None = None
-
-    @staticmethod
-    def random() -> Circle:
-        return Circle(
-            random.choice(range(1, 320)),
-            random.choice(range(1, 240)),
-            random.choice(range(5, 16)),
-            random.choice(range(1, 10)),
-        )
-
-    def overlaps(self, other: Circle) -> bool:
-        return math.hypot(other.x - self.x, other.y - self.y) < (self.r + other.r)
-
-
 class App(Context):
     def __init__(self) -> None:
-        self._state = GameState()
         pyxel.init(320, 240)
+        pyxel.load("demo.pyxres")
+        self._state = GameState()
 
     def run(self) -> None:
         pyxel.run(self.update, self.draw)
@@ -116,4 +128,5 @@ class App(Context):
         self._state.draw()
 
 
-App().run()
+if __name__ == "__main__":
+    App().run()
