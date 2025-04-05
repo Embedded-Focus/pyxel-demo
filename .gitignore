@@ -13,6 +13,7 @@ wheels/
 .envrc
 
 # Build artifacts
-build.pyxapp
+bin.pyxapp
+bin.html
 shoot.html
 pyxel_examples/

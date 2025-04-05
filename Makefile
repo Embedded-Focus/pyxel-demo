@@ -1,13 +1,14 @@
 app2html: package
-	pyxel app2html build.pyxapp
-	mv build.html shoot.html
+	pyxel app2html bin.pyxapp
+	sed 's/\(gamepad:\s*"\)enabled"/\1disabled"/' <bin.html >shoot.html
+
+.PHONY: run
+run:
+	pyxel run bin/demo.py
 
 .PHONY: package
 package:
-	rm -rf build
-	mkdir -p build
-	cp main.py build
-	pyxel package build build/main.py
+	pyxel package bin bin/demo.py
 
 .PHONY: clean
 clean:
